@@ -2,11 +2,85 @@
 <head>
 <title>fluxconv Flux Conversion Tests</title>
 <script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
-<script language="JavaScript" type="text/html" src="../src/fluxconv.html"></script>
+<script language="JavaScript" type="text/javascript" src="../src/fluxconv.js"></script>
 <script language="JavaScript" type="text/javascript">
-function testFailure() {
-	assert(false);
+
+/* assertion for numeric difference */
+function assertInDelta() {
+	assert(Math.abs(arguments[1] - arguments[0]) <= arguments[2]);
 }
+
+function testAssertInDelta() {
+	assertInDelta(1, 1, 0);
+	assertInDelta(3.1e1, 31.4, 1);
+	assertInDelta(1, 1, 0.1);
+	assertInDelta(1, 1, 1);
+	try {
+		assertInDelta(0, 1, 0.5);
+		assertNonJsUnitException("Failing assertInDelta did not throw an exception");
+	} catch (e1) {
+	}
+}
+
+/* conversions to be tested */
+var vBand = {	center: 0.55, width: 0.09 };	// um
+var kBand = { center: 2.18, width: 0.4 };
+
+var oneWm2um = { value: 1, unit: 'Wm2um' };
+var conversions = [
+	{ band: vBand, from: { value: 1.008e11, unit: 'Jy' }, to: oneWm2um },
+	{ band: vBand, from: oneWm2um, to: oneWm2um },
+	{ band: vBand, from: { value: 1e-4, unit: 'Wcm2um' }, to: oneWm2um },
+	{ band: vBand, from: { value: 1000, unit: 'ergseccm2um' }, to: oneWm2um },
+	{ band: vBand, from: { value: 2.767e30, unit: 'psseccm2um' }, to: oneWm2um },
+	{ band: vBand, from: oneWm2um, to: { value: 1.008e11, unit: 'Jy' } },
+	{ band: vBand, from: oneWm2um, to: { value: 1, unit: 'Wm2um' } },
+	{ band: vBand, from: oneWm2um, to: { value: 1e-4, unit: 'Wcm2um' } },
+	{ band: vBand, from: oneWm2um, to: { value: 1000, unit: 'ergseccm2um' } },
+	{ band: vBand, from: oneWm2um, to: { value: 2.767e30, unit: 'psseccm2um' } },
+	{ band: vBand, from: oneWm2um, to: { value: -18.56, unit: 'mag' } },
+	{ band: vBand, from: oneWm2um, to: { value: -18.61, unit: 'ABmag' } },
+	/* the test checks the flux density (per micron) */
+	{ band: vBand, from: oneWm2um, to: { value: 0.09/vBand.width, unit: 'Wm2' } },
+	{ band: vBand, from: oneWm2um, to: { value: 9e-6/vBand.width, unit: 'Wcm2' } },
+	{ band: vBand, from: oneWm2um, to: { value: 90/vBand.width, unit: 'ergseccm2' } },
+	/* input values should be integrated over wavelength */
+	{ band: vBand, from: { value: 0.09, unit: 'Wm2' }, to: oneWm2um },
+	{ band: vBand, from: { value: 9e-6, unit: 'Wcm2' }, to: oneWm2um },
+	{ band: vBand, from: { value: 90, unit: 'ergseccm2' }, to: oneWm2um }
+];
+
+function testConversions() {
+	var i, conv, unitindex, result;
+	for(i = 0; i < conversions.length; i++) {
+		conv = conversions[i];
+		conv.from.density = conv.from.value;
+		conv.from.integ = conv.from.value;
+		if ( conv.from.unit === 'Wm2um' ) {
+			for(unitindex = 0; unitindex < units.length; unitindex++) {
+				if ( units[unitindex].name === conv.to.unit ) {
+					break;
+				}
+			}
+			assert(unitindex < units.length);
+			result = Flux_putFlux(conv.from, unitindex, conv.band.center, conv.band.width);
+		} else {
+			if ( conv.to.unit === 'Wm2um' ) {
+				for(unitindex = 0; unitindex < units.length; unitindex++) {
+					if ( units[unitindex].name === conv.from.unit ) {
+						break;
+					}
+				}
+				assert(unitindex < units.length);
+				result = Flux_getFlux(conv.from.density, unitindex, conv.band.center, conv.band.width).density;
+			} else {
+				assert('Units for conversion test is not valid: ' + conv.from.unit + ' => ' + conv.to.unit, false);
+			}
+		}
+		assertInDelta(conv.to.value, result, Math.abs(conv.to.value*0.01));
+	}
+}
+
 </script>
 </head>
 <body/>
