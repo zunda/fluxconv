@@ -57,21 +57,21 @@ function testConversions() {
 		conv.from.density = conv.from.value;
 		conv.from.integ = conv.from.value;
 		if ( conv.from.unit === 'Wm2um' ) {
-			for(unitindex = 0; unitindex < units.length; unitindex++) {
-				if ( units[unitindex].name === conv.to.unit ) {
+			for(unitindex = 0; unitindex < fc.units.length; unitindex++) {
+				if ( fc.units[unitindex].name === conv.to.unit ) {
 					break;
 				}
 			}
-			assert(unitindex < units.length);
+			assert('Invalid unit as destination: ' + conv.to.unit, unitindex < fc.units.length);
 			result = Flux_putFlux(conv.from, unitindex, conv.band.center, conv.band.width);
 		} else {
 			if ( conv.to.unit === 'Wm2um' ) {
-				for(unitindex = 0; unitindex < units.length; unitindex++) {
-					if ( units[unitindex].name === conv.from.unit ) {
+				for(unitindex = 0; unitindex < fc.units.length; unitindex++) {
+					if ( fc.units[unitindex].name === conv.from.unit ) {
 						break;
 					}
 				}
-				assert(unitindex < units.length);
+				assert(unitindex < fc.units.length);
 				result = Flux_getFlux(conv.from.density, unitindex, conv.band.center, conv.band.width).density;
 			} else {
 				assert('Units for conversion test is not valid: ' + conv.from.unit + ' => ' + conv.to.unit, false);

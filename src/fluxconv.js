@@ -31,30 +31,32 @@ ver 2.0 Jun 22, 2001 zunda <zunda at freeshell.org>
 
 */
 
+var fc = {};	// Container of objects for fluxconv
+
 // Possible units
-function Unit(name, html, neg, log) {
-  this.name = name;			// Unit name in plain text
-  this.html = html;			// Unit name in HTML
-  this.neg = neg;			// Allow negative value?
-  this.logdisp = log;			// Logarithmic unit?
-}
-units = new Array(
-  new Unit('Jy', 	'Jy', 				false, true),
-  new Unit('Wm2um', 	'W/m<sup>2</sup>/um',		false, true),
-  new Unit('Wcm2um', 	'W/cm<sup>2</sup>/um',		false, true),
-  new Unit('ergseccm2um','erg/sec/cm<sup>2</sup>/um',	false, true),
-  new Unit('psseccm2um','photons/sec/cm<sup>2</sup>/um',false, true),
-  new Unit('Wm2', 	'W/m<sup>2</sup>',		false, true),
-  new Unit('Wcm2', 	'W/cm<sup>2</sup>',		false, true),
-  new Unit('ergseccm2',	'erg/sec/cm<sup>2</sup>',	false, true),
-  new Unit('psseccm2',	'photons/sec/cm<sup>2</sup>',	false, true),
-  new Unit('mag', 	'mag',				true, false),
-  new Unit('ABmag', 	'ABmag',			true, false)
-);
+fc.units = [
+	{
+		name: 'Jy',	// Plain text representation
+		html: 'Jy',	// HTML representaion
+		//neg: false,	- Can value be negative?
+		expdisp: true	// Use exponential display?
+	},
+	{ name: 'Wm2um', html: 'W/m<sup>2</sup>/um', expdisp: true },
+	{ name: 'Wcm2um', html: 'W/cm<sup>2</sup>/um', expdisp: true },
+	{ name: 'ergseccm2um', html: 'erg/sec/cm<sup>2</sup>/um', expdisp: true },
+	{ name: 'psseccm2um', html: 'photons/sec/cm<sup>2</sup>/um', expdisp: true },
+	{ name: 'Wm2', html: 'W/m<sup>2</sup>', expdisp: true },
+	{ name: 'Wcm2', html: 'W/cm<sup>2</sup>', expdisp: true },
+	{ name: 'ergseccm2', html: 'erg/sec/cm<sup>2</sup>', expdisp: true },
+	{ name: 'psseccm2', html: 'photons/sec/cm<sup>2</sup>', expdisp: true },
+	{ name: 'mag', html: 'mag', neg: true },
+	{ name: 'ABmag', html: 'ABmag', neg: true }
+];
+
 // get the index for units[] of Jy
-for(i = 0; i < units.length; i++) {
-  if (units[i].name == 'Jy') {
-    indexJy = i;
+for(i = 0; i < fc.units.length; i++) {
+  if (fc.units[i].name == 'Jy') {
+    fc.indexJy = i;
     break;
   }
 }
@@ -248,21 +250,21 @@ function update(that, newunit) {
     return(-1);
   }
   // get the value
-  newvalue = that.values[units[newunit].name].value;
+  newvalue = that.values[fc.units[newunit].name].value;
   if (!(newvalue > 0)) {			// if it is not positive value
-    if (!units[newunit].neg) {			// if it can't be negative
+    if (!fc.units[newunit].neg) {			// if it can't be negative
       alert('Input possitive value for flux.');
       if (newvalue <= 0) {			// if it is negative
         newvalue *= -1;				// change sign
-        that.values[units[newunit].name].value = newvalue;
+        that.values[fc.units[newunit].name].value = newvalue;
       } else {					// if it is not a value
-        that.values[units[newunit].name].value = '';
+        that.values[fc.units[newunit].name].value = '';
         return -1;
       }
     } else {
       if (!(newvalue <= 0)) {			// if it is not a value
         alert('Input a value for flux.');
-        that.values[units[newunit].name].value = '';
+        that.values[fc.units[newunit].name].value = '';
         return -1;
       }
     }
@@ -272,12 +274,12 @@ function update(that, newunit) {
 
   // calculate flux in other units
   if (newflux.density != '' || newflux.integ != '') {
-    for(i = 0; i < units.length; i++) {
+    for(i = 0; i < fc.units.length; i++) {
       r = Flux_putFlux(newflux, i, l, dl);
       if (r * r > 0 || r == 0) {
-        that.values[units[i].name].value = RoundStr(r, units[i].logdisp);
+        that.values[fc.units[i].name].value = RoundStr(r, fc.units[i].expdisp);
       } else {
-        that.values[units[i].name].value = '';
+        that.values[fc.units[i].name].value = '';
       }
     }
   }
@@ -295,7 +297,7 @@ function Flux_getFlux(newvalue, newunit, center, width) {
   this.density = '';
   this.integ = '';
 
-  switch(units[newunit].name) {
+  switch(fc.units[newunit].name) {
   case 'Jy':
     if (center > 0) {this.density = 3e-12*newvalue/(center*center);}
     break;
@@ -339,7 +341,7 @@ function Flux_getFlux(newvalue, newunit, center, width) {
       alert('Magnitude too big.');
     }
     Jy = Math.pow(10,(8.9-newvalue)/2.5);
-    this.Flux_getFlux(Jy, indexJy, center, width);
+    this.Flux_getFlux(Jy, fc.indexJy, center, width);
     // AB=-2.5log fv[erg/sec/cm2/Hz] - 48.60
     //   =-2.5log fv[Jy] +8.9
     break;
@@ -357,7 +359,7 @@ function Flux_putFlux(value, unit, center, width) {
   var r, t, Jy;
   r = NaN;
 
-  switch(units[unit].name) {
+  switch(fc.units[unit].name) {
   case 'Jy':
     if (value.density > 0 && center > 0) {
       r = value.density/3e-12*(center*center);
@@ -398,7 +400,7 @@ function Flux_putFlux(value, unit, center, width) {
     }
     break;
   case 'ABmag':
-    Jy = Flux_putFlux(value, indexJy, center, width);
+    Jy = Flux_putFlux(value, fc.indexJy, center, width);
     if (Jy > 0) {r = -2.5*Math.log(Jy)/Math.log(10)+8.9;}
     break;
   }

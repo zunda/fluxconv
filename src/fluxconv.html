@@ -48,10 +48,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   // --></script>
   <br>
   <script><!--
-  for(i = 0; i < units.length; i++) {
+  for(i = 0; i < fc.units.length; i++) {
     document.write("<input type=\"text\" name=\"",
-      units[i].name,"\" onChange=\"update(document, ",i,");\">",
-      units[i].html,"<br>");
+      fc.units[i].name,"\" onChange=\"update(document, ",i,");\">",
+      fc.units[i].html,"<br>");
   }
   // --></script>
   <input type="button" name="UpdateButton" value="Update" onClick="update(document, -1);">
