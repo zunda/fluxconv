@@ -34,23 +34,25 @@ ver 2.0 Jun 22, 2001 zunda <zunda at freeshell.org>
 var fc = {};	// Container of objects for fluxconv
 
 // Possible units
+fc.toPrecision = function( x ){ return x.toPrecision( 4 ); },
+fc.toFixed = function( x ){ return x.toFixed( 3 ); },
 fc.units = [
 	{
 		name: 'Jy',	// Plain text representation
 		html: 'Jy',	// HTML representaion
 		//neg: false,	- Can value be negative?
-		expdisp: true	// Use exponential display?
+		disp: fc.toPrecision
 	},
-	{ name: 'Wm2um', html: 'W/m<sup>2</sup>/um', expdisp: true },
-	{ name: 'Wcm2um', html: 'W/cm<sup>2</sup>/um', expdisp: true },
-	{ name: 'ergseccm2um', html: 'erg/sec/cm<sup>2</sup>/um', expdisp: true },
-	{ name: 'psseccm2um', html: 'photons/sec/cm<sup>2</sup>/um', expdisp: true },
-	{ name: 'Wm2', html: 'W/m<sup>2</sup>', expdisp: true },
-	{ name: 'Wcm2', html: 'W/cm<sup>2</sup>', expdisp: true },
-	{ name: 'ergseccm2', html: 'erg/sec/cm<sup>2</sup>', expdisp: true },
-	{ name: 'psseccm2', html: 'photons/sec/cm<sup>2</sup>', expdisp: true },
-	{ name: 'mag', html: 'mag', neg: true },
-	{ name: 'ABmag', html: 'ABmag', neg: true }
+	{ name: 'Wm2um', html: 'W/m<sup>2</sup>/um', disp: fc.toPrecision },
+	{ name: 'Wcm2um', html: 'W/cm<sup>2</sup>/um', disp: fc.toPrecision },
+	{ name: 'ergseccm2um', html: 'erg/sec/cm<sup>2</sup>/um', disp: fc.toPrecision },
+	{ name: 'psseccm2um', html: 'photons/sec/cm<sup>2</sup>/um', disp: fc.toPrecision },
+	{ name: 'Wm2', html: 'W/m<sup>2</sup>', disp: fc.toPrecision },
+	{ name: 'Wcm2', html: 'W/cm<sup>2</sup>', disp: fc.toPrecision },
+	{ name: 'ergseccm2', html: 'erg/sec/cm<sup>2</sup>', disp: fc.toPrecision },
+	{ name: 'psseccm2', html: 'photons/sec/cm<sup>2</sup>', disp: fc.toPrecision },
+	{ name: 'mag', html: 'mag', neg: true, disp: fc.toFixed },
+	{ name: 'ABmag', html: 'ABmag', neg: true, disp: fc.toFixed }
 ];
 
 // get the index for units[] of Jy
@@ -63,82 +65,6 @@ for(i = 0; i < fc.units.length; i++) {
 prec = 4;				// number of digits
 logarithmic = 4;			// minimum log(x) to use E+nn
 base = 10;				// base to be displayed
-
-function RoundStr(x, islog) {
-  var v, s, p, o; 	// v = s * p * 10^o
-  var pp, po;		// p = pp * 10^po
-  var i, j, k, l;	// temp
-  var rstr, tstr;	// return string
-  var isdot;		// period?
-  var n;		// number of digits displayed
-  var dpos, prezero, postzero;
-    // period position (after this number of digits not including zero)
-    // number of zero's between period and first digits
-    // number of zero's after digits
-  var tzero;		// zero threshold
-  tzero = Math.pow(10,-prec-1);
-
-  // sign
-  v = x; if (v < 0) {s = -1; v = -v;} else {s = 1;}
-
-  // order
-  if (islog && v > 0) {
-    o = Math.floor(Math.log(v)/Math.log(10));
-  } else {
-    o = 0;
-  }
-  k = Math.pow(10,o);
-  p = v/k;
-
-  if (p > tzero) {
-    // make the digits
-    po = Math.floor(Math.log(p)/Math.log(10)+Math.pow(10,-1-prec));
-    k = Math.pow(10,po+1-prec);
-    pp = p/k;
-    rstr = String(Math.round(pp));
-    // add period
-    if (0 <= po && po < prec-1) {
-      tstr = rstr.substring(0,po+1)+'.'+rstr.substring(po+1,prec);
-      rstr = tstr;
-    }
-    // prefix zeros
-    if (po < 0) {
-      tstr = rstr;
-      rstr = '0.';
-      for(i = 1; i < -po; i++) {
-        rstr += '0';
-      }
-      rstr += tstr;
-    }
-    // postfix zeros
-    if (po >= prec) {
-      for(i = 0; i <= po - prec; i++) {
-        rstr += '0';
-      }
-    }
-    // add order part
-    if (o != 0) {
-      rstr += 'e';
-      if (o>0) {rstr += '+';}
-      rstr += String(o);
-    }
-    // prefix sign
-    if (s < 0) {
-      tstr = '-' + rstr;
-      rstr = tstr;
-    }
-  } else {
-    rstr = '0';
-    if (prec > 2) {
-      rstr += '.';
-      for(i = 0; i < prec-1; i++) {
-        rstr += '0';
-      }
-    }
-  }
-
-  return rstr;
-}
 
 // AB magnitude
 // AB=-2.5log fv[erg/sec/cm2/Hz] - 48.60
@@ -277,7 +203,7 @@ function update(that, newunit) {
     for(i = 0; i < fc.units.length; i++) {
       r = Flux_putFlux(newflux, i, l, dl);
       if (r * r > 0 || r == 0) {
-        that.values[fc.units[i].name].value = RoundStr(r, fc.units[i].expdisp);
+        that.values[fc.units[i].name].value = fc.units[i].disp(r);
       } else {
         that.values[fc.units[i].name].value = '';
       }
