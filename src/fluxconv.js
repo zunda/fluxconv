@@ -62,9 +62,6 @@ for(i = 0; i < fc.units.length; i++) {
     break;
   }
 }
-prec = 4;				// number of digits
-logarithmic = 4;			// minimum log(x) to use E+nn
-base = 10;				// base to be displayed
 
 // AB magnitude
 // AB=-2.5log fv[erg/sec/cm2/Hz] - 48.60
