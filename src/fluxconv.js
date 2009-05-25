@@ -342,15 +342,6 @@ function hnu(l) {
   return r;
 }
 
-// Flux
-function Flux() {
-  this.density = '';			// flux in W/m2/um
-  this.integ = '';			// flux in W/m2
-
-  this.getFlux = Flux_getFlux;
-  this.putFlux = Flux_putFlux;
-}
-
 // Get magnitude zero point
 function ZeroWm2um(l) {
   var r, i;
